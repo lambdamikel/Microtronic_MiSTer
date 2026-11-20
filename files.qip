@@ -1,0 +1,6 @@
+set_global_assignment -name VERILOG_FILE rtl/tms1600.v
+set_global_assignment -name VERILOG_FILE rtl/microtronic.v
+set_global_assignment -name VERILOG_FILE rtl/mic_loader.v
+set_global_assignment -name VERILOG_FILE rtl/video.v
+set_global_assignment -name SDC_FILE Microtronic.sdc
+set_global_assignment -name SYSTEMVERILOG_FILE Microtronic.sv

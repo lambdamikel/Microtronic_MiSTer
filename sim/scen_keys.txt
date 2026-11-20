@@ -1,0 +1,130 @@
+run 60000 2000
+down HALT
+run 12000 2000
+up HALT
+run 12000 2000
+down NEXT
+run 12000 2000
+up NEXT
+run 12000 2000
+down 0
+run 12000 2000
+up 0
+run 12000 2000
+down 0
+run 12000 2000
+up 0
+run 12000 2000
+down F
+run 12000 2000
+up F
+run 12000 2000
+down 1
+run 12000 2000
+up 1
+run 12000 2000
+down 0
+run 12000 2000
+up 0
+run 12000 2000
+down NEXT
+run 12000 2000
+up NEXT
+run 12000 2000
+down 1
+run 12000 2000
+up 1
+run 12000 2000
+down 2
+run 12000 2000
+up 2
+run 12000 2000
+down 3
+run 12000 2000
+up 3
+run 12000 2000
+down NEXT
+run 12000 2000
+up NEXT
+run 12000 2000
+down C
+run 12000 2000
+up C
+run 12000 2000
+down 0
+run 12000 2000
+up 0
+run 12000 2000
+down 0
+run 12000 2000
+up 0
+run 12000 2000
+down NEXT
+run 12000 2000
+up NEXT
+run 12000 2000
+down HALT
+run 12000 2000
+up HALT
+run 12000 2000
+down NEXT
+run 12000 2000
+up NEXT
+run 12000 2000
+down 0
+run 12000 2000
+up 0
+run 12000 2000
+down 0
+run 12000 2000
+up 0
+run 12000 2000
+down RUN
+run 12000 2000
+up RUN
+run 12000 2000
+run 100000 2000
+down HALT
+run 12000 2000
+up HALT
+run 12000 2000
+down REG
+run 12000 2000
+up REG
+run 12000 2000
+down 7
+run 12000 2000
+up 7
+run 12000 2000
+down 5
+run 12000 2000
+up 5
+run 12000 2000
+down HALT
+run 12000 2000
+up HALT
+run 12000 2000
+down CCE
+run 12000 2000
+up CCE
+run 12000 2000
+down BKP
+run 12000 2000
+up BKP
+run 12000 2000
+down 0
+run 12000 2000
+up 0
+run 12000 2000
+down 3
+run 12000 2000
+up 3
+run 12000 2000
+down STEP
+run 12000 2000
+up STEP
+run 12000 2000
+down STEP
+run 12000 2000
+up STEP
+run 12000 2000

@@ -1,0 +1,10 @@
+# Clock: hours, minutes, seconds
+# MiSTer menu: 1 Hz clock cable to = Input 4
+# Shows the built-in clock running; it starts at 00 00 00. Needs the 1 Hz clock on input 4.
+# An example from the emulator's programmer's guide (guide.html).
+
+@ 00
+
+F6A
+F06
+C01

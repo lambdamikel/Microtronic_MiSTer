@@ -1,0 +1,23 @@
+run 60000 2000
+load 00 150 F10 C02
+down HALT
+run 12000 2000
+up HALT
+run 12000 2000
+down NEXT
+run 12000 2000
+up NEXT
+run 12000 2000
+down 0
+run 12000 2000
+up 0
+run 12000 2000
+down 0
+run 12000 2000
+up 0
+run 12000 2000
+down RUN
+run 12000 2000
+up RUN
+run 12000 2000
+run 200000 2000

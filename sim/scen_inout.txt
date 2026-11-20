@@ -1,0 +1,35 @@
+run 60000 2000
+load 00 F10 FD0 FE0 C01
+down HALT
+run 12000 2000
+up HALT
+run 12000 2000
+down NEXT
+run 12000 2000
+up NEXT
+run 12000 2000
+down 0
+run 12000 2000
+up 0
+run 12000 2000
+down 0
+run 12000 2000
+up 0
+run 12000 2000
+down RUN
+run 12000 2000
+up RUN
+run 12000 2000
+run 50000 2000
+din 5
+run 50000 2000
+din 10
+run 50000 2000
+clock 4
+run 250000 2000
+patch 0 1
+run 100000 2000
+unpatch
+clock 0
+din 0
+run 30000 2000

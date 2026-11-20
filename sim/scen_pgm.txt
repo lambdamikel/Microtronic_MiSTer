@@ -1,0 +1,46 @@
+run 60000 2000
+down HALT
+run 12000 2000
+up HALT
+run 12000 2000
+down PGM
+run 12000 2000
+up PGM
+run 12000 2000
+down 7
+run 12000 2000
+up 7
+run 12000 2000
+run 200000 2000
+down 1
+run 12000 2000
+up 1
+run 12000 2000
+down 2
+run 12000 2000
+up 2
+run 12000 2000
+down 3
+run 12000 2000
+up 3
+run 12000 2000
+down NEXT
+run 12000 2000
+up NEXT
+run 12000 2000
+run 300000 2000
+reset
+run 100000 2000
+down HALT
+run 12000 2000
+up HALT
+run 12000 2000
+down PGM
+run 12000 2000
+up PGM
+run 12000 2000
+down 1
+run 12000 2000
+up 1
+run 12000 2000
+run 100000 2000
