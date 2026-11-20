@@ -121,9 +121,10 @@ always @* begin
 	for (i = 0; i < 11; i = i + 1) begin
 		if (circ(h2, v2, colx(sockcol(i)), SY, 64)) px = C_SOCK;
 		if (circ(h2, v2, colx(sockcol(i)), SY, 16)) px = C_HOLE;
-		if (i >= 5 && i < 9 && inputs[i-5] && circ(h2, v2, colx(sockcol(i)), SY, 42))
-			px = circ(h2, v2, colx(sockcol(i)) - 2, SY - 2, 4) ? 24'hfff0a0 : C_PEG;
 	end
+	for (i = 0; i < 4; i = i + 1)              // a plug in each input jack that is high
+		if (inputs[i] && circ(h2, v2, colx(36 + 4*i), SY, 42))
+			px = circ(h2, v2, colx(36 + 4*i) - 2, SY - 2, 4) ? 24'hfff0a0 : C_PEG;
 	// console
 	if (inbox(h2, v2, 16, 128, 623, 463)) px = C_CASE;
 	// badge
