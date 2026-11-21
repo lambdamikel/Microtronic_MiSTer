@@ -14,7 +14,9 @@ checked against it instruction by instruction (see *Verification*).
 
 This is version 1.0; the F12 menu shows the version and build date.
 
-Video: [the Microtronic core on the MiSTer DE10-Nano](https://youtu.be/vhijCqyAK6E) (YouTube).
+Demo video on YouTube (click the picture):
+
+[![Demo video: the Busch 2090 Microtronic core on the MiSTer DE10-Nano](https://img.youtube.com/vi/vhijCqyAK6E/maxresdefault.jpg)](https://www.youtube.com/watch?v=vhijCqyAK6E)
 
 ## Installation
 
