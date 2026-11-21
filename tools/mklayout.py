@@ -39,21 +39,20 @@ def centre(ccol, row, s, colour):
     characters is drawn with the shift bit: video.v moves those cells 4 pixels to the right."""
     if len(s) % 2: put(ccol - len(s) // 2, row, s, colour)
     else:          put(ccol - len(s) // 2, row, s, colour, shift=1)
-# I/O strip (rows 1-6): socket centres at text columns 5 | 12 16 20 24 | 36 40 44 48 | 58 | 70
-centre(5, 1, 'GND', BLACK); centre(5, 2, '-', BLACK)
-centre(18, 1, 'Ausgänge/Outputs', BLACK)
-for i, c in enumerate((12, 16, 20, 24)): centre(c, 2, str(i + 1), BLACK)
-centre(42, 1, 'Eingänge/Inputs', BLACK)
-for i, c in enumerate((36, 40, 44, 48)): centre(c, 2, str(i + 1), BLACK)
-centre(58, 1, 'Takt/Clock', BLACK); centre(58, 2, '1 Hz', BLACK)
-centre(70, 1, 'GND', BLACK); centre(70, 2, '-', BLACK)
-for i, c in enumerate((36, 40, 44, 48)): centre(c, 4, 'F' + str(i + 1), MID)
+# I/O strip (rows 1-6): socket centres at text columns 7 | 14 18 22 26 | 38 42 46 50 | 60 | 72 (centred, see video.v)
+centre(7, 1, 'GND', BLACK); centre(7, 2, '-', BLACK)
+centre(20, 1, 'Ausgänge/Outputs', BLACK)
+for i, c in enumerate((14, 18, 22, 26)): centre(c, 2, str(i + 1), BLACK)
+centre(44, 1, 'Eingänge/Inputs', BLACK)
+for i, c in enumerate((38, 42, 46, 50)): centre(c, 2, str(i + 1), BLACK)
+centre(60, 1, 'Takt/Clock', BLACK); centre(60, 2, '1 Hz', BLACK)
+centre(72, 1, 'GND', BLACK); centre(72, 2, '-', BLACK)
+for i, c in enumerate((38, 42, 46, 50)): centre(c, 4, 'F' + str(i + 1), MID)
 # left panel: everything centred on column 22 (x = 180), like the shapes in video.v
-# badge
-centre(22, 9, 'microtronic', BLACK); centre(22, 10, 'computer system', BLACK)
-# carry / zero LEDs (row 12), display label (row 19, below the bezel)
-put(16, 12, 'Carry', LIGHT); put(27, 12, 'Zero', LIGHT)
-centre(22, 19, 'Anzeige/Display', LIGHT)
+# the badge (rows 8-12) is a bitmap: rtl/badge.hex from tools/mkbadge.py
+# carry / zero LEDs (row 13), display label (row 20, below the bezel)
+put(16, 13, 'Carry', LIGHT); put(27, 13, 'Zero', LIGHT)
+centre(22, 20, 'Anzeige/Display', LIGHT)
 # red keys G / H: centres at columns 16 and 28
 centre(16, 25, 'G', LIGHT); centre(28, 25, 'H', LIGHT)
 centre(22, 26, 'Taster/Keys', LIGHT)

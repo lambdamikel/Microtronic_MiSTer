@@ -12,6 +12,8 @@ checked against it instruction by instruction (see *Verification*).
 
 ![The core running the clock program from the programmer's guide, with the 1 Hz clock cable on input 4](docs/screenshot.png)
 
+This is version 1.0; the F12 menu shows the version and build date.
+
 ## Installation
 
 - Copy `releases/Microtronic_<date>.rbf` to `_Computer/` on the SD card.
@@ -61,7 +63,8 @@ Every program file that needs wiring says so in its second line, for example
 ## Screen
 
 The picture is drawn at 640×480. It has the I/O strip with the output LEDs
-and the input jacks (a yellow plug shows a high input), the 1 Hz LED, the badge,
+and the input jacks (a yellow plug shows a high input), the 1 Hz LED, the badge
+(the lettering traced from a photo of the real one, as in the browser emulator; `tools/mkbadge.py`),
 the carry/zero LEDs, and the slanted red six-digit display. Below are the red
 keys G/H and the keypad, where held keys light up. Display segments and LEDs show
 how long they were on (averaged over 2,048 instruction cycles), so the multiplexed

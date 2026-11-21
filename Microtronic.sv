@@ -73,7 +73,9 @@ localparam CONF_STR = {
 	"O[122:121],Aspect ratio,Original,Full Screen,[ARC1],[ARC2];",
 	"-;",
 	"R[0],Reset;",
-	"V,v",`BUILD_DATE
+	"-;",
+	"-,Version 1.0 - build ",`BUILD_DATE,";",
+	"V,v1.0-",`BUILD_DATE
 };
 
 wire         forced_scandoubler;

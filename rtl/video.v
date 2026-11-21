@@ -38,6 +38,12 @@ reg  [7:0] font[0:4095];
 initial $readmemh("rtl/text.hex", text);
 initial $readmemh("rtl/font.hex", font);
 
+// the badge: 120x64 pixels of 4-bit ink coverage, 128 entries per row (rtl/badge.hex, tools/mkbadge.py)
+localparam [9:0] BX0 = 120, BY0 = 136;      // its place, centred on x = 180 (the real one's proportions)
+reg  [3:0] badge[0:8191];
+initial $readmemh("rtl/badge.hex", badge);
+reg  [3:0] bq;
+
 reg [11:0] tq, tqb;
 reg  [7:0] fq, fqb;
 reg  [3:0] tcol, tcolb;
@@ -46,6 +52,7 @@ wire [11:0] trow   = {v0[8:4], 6'd0} + {2'd0, v0[8:4], 4'd0};      // row*80
 wire  [9:0] hb     = h0 - 10'd4;
 wire [11:0] taddr  = trow + {5'd0, h0[9:3]};
 wire [11:0] taddrb = (h0 < 4) ? 12'd4095 : trow + {5'd0, hb[9:3]};  // 4095 is padding (a space)
+wire  [9:0] bx     = h1 - BX0, by = v1 - BY0;                       // badge pixel, read for h2
 
 always @(posedge clk) if (ce_pix) begin
 	tq  <= text[taddr];
@@ -54,6 +61,7 @@ always @(posedge clk) if (ce_pix) begin
 	fq  <= font[{tq[7:0],  v1[3:0]}];
 	fqb <= font[{tqb[7:0], v1[3:0]}];
 	tcol  <= tq[11:8];
+	bq    <= badge[{by[5:0], bx[6:0]}];
 	tcolb <= tqb[11:8];
 	h2 <= h1; v2 <= v1;
 end
@@ -85,7 +93,7 @@ endfunction
 // ---- the picture ----
 localparam [23:0] C_BG    = 24'h262628, C_CASE  = 24'h161618, C_STRIP = 24'hc9c9c6,
                   C_SOCK  = 24'h2a2a2a, C_HOLE  = 24'h060606, C_PEG   = 24'hf2c21a,
-                  C_BADGE = 24'hd8d8d4, C_FRAME = 24'h5a5a5a, C_BEZEL = 24'h38383a, C_WIN = 24'h1a0404,
+                  C_BEZEL = 24'h38383a, C_WIN = 24'h1a0404,
                   C_PAD   = 24'hc8c8c4, C_KEY   = 24'h1c1c1e, C_KEYDN = 24'h9a2a22, C_DIV   = 24'h909090,
                   C_RKEY  = 24'hd83c3c, C_RKDN  = 24'hff8c80, C_RKFR  = 24'h401010, C_LEDRIM = 24'h3a0c0c,
                   C_KEYHI = 24'h4a4a50, C_KEYLO = 24'h060606;
@@ -99,18 +107,20 @@ function [23:0] ledc(input [7:0] lvl);
 	ledc = {mix(8'h48, 8'hff, lvl), mix(8'h0a, 8'h40, lvl), mix(8'h0a, 8'h30, lvl)};
 endfunction
 
-// strip: socket centres (x) at text columns 5 | 12 16 20 24 | 36 40 44 48 | 58 | 70
+// strip: socket centres (x) at text columns 7 | 14 18 22 26 | 38 42 46 50 | 60 | 72
+// (x 60..580, centred on the strip like the left GND to the right GND)
 localparam [9:0] SY = 88, LY = 56;
 function [9:0] colx(input [6:0] c); colx = {c, 3'd4}; endfunction
 function [6:0] sockcol(input [3:0] i);      // GND, outputs 1-4, inputs 1-4, clock, GND
-	sockcol = (i == 0) ? 7'd5 : (i < 5) ? 7'd12 + 4*(i-1) : (i < 9) ? 7'd36 + 4*(i-5) : (i == 9) ? 7'd58 : 7'd70;
+	sockcol = (i == 0) ? 7'd7 : (i < 5) ? 7'd14 + 4*(i-1) : (i < 9) ? 7'd38 + 4*(i-5) : (i == 9) ? 7'd60 : 7'd72;
 endfunction
 
-// left panel (x 16..343, between the console edge and the keypad): badge, carry/zero LEDs with
-// the display, and the red keys, each centred on x = 180 (text column 22)
+// left panel (x 16..343, between the console edge and the keypad; y 136..447 like the keypad):
+// the badge, the carry/zero LEDs with the display, and the red keys, each centred on x = 180
+// (text column 22)
 // display digits: x = 62 + 40*d; the slanted ink of all six (with the last dp) spans 62..298,
-// 12 pixels inside the window on either side; y = 226..281
-localparam [9:0] DX0 = 62, DY0 = 226;
+// 12 pixels inside the window on either side; y = 242..297
+localparam [9:0] DX0 = 62, DY0 = 242;
 
 reg [23:0] ledrgb[0:6];        // out 1-4, carry, zero, 1 Hz: colours, computed outside the pixel path
 integer li;
@@ -124,6 +134,8 @@ reg  [3:0] sg;          // segment hit: 0..7, 8 = none
 reg  [7:0] lvl;
 reg        tbit;
 reg  [2:0] tc;
+reg [23:0] plate;
+wire [5:0] by2 = v2 - BY0;    // badge row at h2, for the plate shading
 integer i, kc, kr;
 
 always @* begin
@@ -132,29 +144,33 @@ always @* begin
 	if (inbox(h2, v2, 16, 16, 623, 111)) px = C_STRIP;
 	// outputs: LED above, socket below
 	for (i = 0; i < 4; i = i + 1) begin
-		if (circ(h2, v2, colx(12 + 4*i), LY, 64)) px = C_LEDRIM;
-		if (circ(h2, v2, colx(12 + 4*i), LY, 42)) px = ledrgb[i];
+		if (circ(h2, v2, colx(14 + 4*i), LY, 64)) px = C_LEDRIM;
+		if (circ(h2, v2, colx(14 + 4*i), LY, 42)) px = ledrgb[i];
 	end
-	if (circ(h2, v2, colx(58), LY, 64)) px = C_LEDRIM;
-	if (circ(h2, v2, colx(58), LY, 42)) px = ledrgb[6];
+	if (circ(h2, v2, colx(60), LY, 64)) px = C_LEDRIM;
+	if (circ(h2, v2, colx(60), LY, 42)) px = ledrgb[6];
 	for (i = 0; i < 11; i = i + 1) begin
 		if (circ(h2, v2, colx(sockcol(i)), SY, 64)) px = C_SOCK;
 		if (circ(h2, v2, colx(sockcol(i)), SY, 16)) px = C_HOLE;
 	end
 	for (i = 0; i < 4; i = i + 1)              // a plug in each input jack that is high
-		if (inputs[i] && circ(h2, v2, colx(36 + 4*i), SY, 42))
-			px = circ(h2, v2, colx(36 + 4*i) - 2, SY - 2, 4) ? 24'hfff0a0 : C_PEG;
+		if (inputs[i] && circ(h2, v2, colx(38 + 4*i), SY, 42))
+			px = circ(h2, v2, colx(38 + 4*i) - 2, SY - 2, 4) ? 24'hfff0a0 : C_PEG;
 	// console
 	if (inbox(h2, v2, 16, 128, 623, 463)) px = C_CASE;
 	// badge
-	if (inbox(h2, v2, 100, 140, 259, 183)) px = inbox(h2, v2, 102, 142, 257, 181) ? C_BADGE : C_FRAME;
-	// carry / zero LEDs (row 12, columns 14 and 25; the labels follow them)
-	if (circ(h2, v2, colx(14), 200, 49)) px = C_LEDRIM;
-	if (circ(h2, v2, colx(14), 200, 30)) px = ledrgb[4];
-	if (circ(h2, v2, colx(25), 200, 49)) px = C_LEDRIM;
-	if (circ(h2, v2, colx(25), 200, 30)) px = ledrgb[5];
+	// badge: the lettering over a brushed-silver plate, light at the top (as in the browser emulator)
+	if (inbox(h2, v2, BX0, BY0, BX0 + 119, BY0 + 63) && !((h2 == BX0 || h2 == BX0 + 119) && (v2 == BY0 || v2 == BY0 + 63))) begin
+		plate = {mix(8'hcf, 8'hb1, {by2, 2'b0}), mix(8'hcf, 8'hb2, {by2, 2'b0}), mix(8'hcd, 8'hb3, {by2, 2'b0})};
+		px = {mix(plate[23:16], 8'h0d, {bq, bq}), mix(plate[15:8], 8'h0d, {bq, bq}), mix(plate[7:0], 8'h0e, {bq, bq})};
+	end
+	// carry / zero LEDs (row 13, columns 14 and 25; the labels follow them)
+	if (circ(h2, v2, colx(14), 216, 49)) px = C_LEDRIM;
+	if (circ(h2, v2, colx(14), 216, 30)) px = ledrgb[4];
+	if (circ(h2, v2, colx(25), 216, 49)) px = C_LEDRIM;
+	if (circ(h2, v2, colx(25), 216, 30)) px = ledrgb[5];
 	// display window
-	if (inbox(h2, v2, 46, 212, 314, 295)) px = inbox(h2, v2, 50, 216, 310, 291) ? C_WIN : C_BEZEL;
+	if (inbox(h2, v2, 46, 228, 314, 311)) px = inbox(h2, v2, 50, 232, 310, 307) ? C_WIN : C_BEZEL;
 	sg = 4'd8; d = 0; lx = 0; ly = 0; lxs = 0; lvl = 0;
 	if (h2 >= DX0 && h2 < DX0 + 240 && v2 >= DY0 && v2 < DY0 + 56) begin
 		d  = (h2 < DX0 + 40) ? 3'd0 : (h2 < DX0 + 80) ? 3'd1 : (h2 < DX0 + 120) ? 3'd2 :
@@ -178,8 +194,8 @@ always @* begin
 		end
 	end
 	// red keys G (centre column 16) and H (column 28)
-	if (inbox(h2, v2, 108, 336, 155, 383)) px = inbox(h2, v2, 111, 339, 152, 380) ? (redkeys[0] ? C_RKDN : C_RKEY) : C_RKFR;
-	if (inbox(h2, v2, 204, 336, 251, 383)) px = inbox(h2, v2, 207, 339, 248, 380) ? (redkeys[1] ? C_RKDN : C_RKEY) : C_RKFR;
+	if (inbox(h2, v2, 108, 344, 155, 391)) px = inbox(h2, v2, 111, 347, 152, 388) ? (redkeys[0] ? C_RKDN : C_RKEY) : C_RKFR;
+	if (inbox(h2, v2, 204, 344, 251, 391)) px = inbox(h2, v2, 207, 347, 248, 388) ? (redkeys[1] ? C_RKDN : C_RKEY) : C_RKFR;
 	// keypad: hex block (4 columns from KX0) and, after a wider gap with a divider, the
 	// function block (2 columns from KXF); keys 32x32, 40 apart, rows 80 apart
 	if (inbox(h2, v2, 344, 136, 615, 447)) px = C_PAD;
