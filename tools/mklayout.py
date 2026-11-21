@@ -48,15 +48,16 @@ for i, c in enumerate((36, 40, 44, 48)): centre(c, 2, str(i + 1), BLACK)
 centre(58, 1, 'Takt/Clock', BLACK); centre(58, 2, '1 Hz', BLACK)
 centre(70, 1, 'GND', BLACK); centre(70, 2, '-', BLACK)
 for i, c in enumerate((36, 40, 44, 48)): centre(c, 4, 'F' + str(i + 1), MID)
+# left panel: everything centred on column 22 (x = 180), like the shapes in video.v
 # badge
-centre(20, 9, 'microtronic', BLACK); centre(20, 10, 'computer system', BLACK)
+centre(22, 9, 'microtronic', BLACK); centre(22, 10, 'computer system', BLACK)
 # carry / zero LEDs (row 12), display label (row 19, below the bezel)
-put(13, 12, 'Carry', LIGHT); put(26, 12, 'Zero', LIGHT)
-centre(25, 19, 'Anzeige/Display', LIGHT)
-# red keys G / H: centres at columns 14 and 26
-centre(14, 25, 'G', LIGHT); centre(26, 25, 'H', LIGHT)
-centre(20, 26, 'Taster/Keys', LIGHT)
-centre(14, 27, '( , )', MID); centre(26, 27, '( . )', MID)
+put(16, 12, 'Carry', LIGHT); put(27, 12, 'Zero', LIGHT)
+centre(22, 19, 'Anzeige/Display', LIGHT)
+# red keys G / H: centres at columns 16 and 28
+centre(16, 25, 'G', LIGHT); centre(28, 25, 'H', LIGHT)
+centre(22, 26, 'Taster/Keys', LIGHT)
+centre(16, 27, '( , )', MID); centre(28, 27, '( . )', MID)
 # keypad: label rows 9, 14, 19, 24; key interiors on rows 11, 16, 21, 26; centres 46 51 56 61 | 68 73 (video.v keyx)
 KEYS = [['C', 'D', 'E', 'F', 'NEXT', 'REG'], ['8', '9', 'A', 'B', 'BKP', 'STEP'],
         ['4', '5', '6', '7', 'RUN', 'HALT'], ['0', '1', '2', '3', 'C/CE', 'PGM']]

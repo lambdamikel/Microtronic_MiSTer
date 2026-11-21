@@ -106,8 +106,11 @@ function [6:0] sockcol(input [3:0] i);      // GND, outputs 1-4, inputs 1-4, clo
 	sockcol = (i == 0) ? 7'd5 : (i < 5) ? 7'd12 + 4*(i-1) : (i < 9) ? 7'd36 + 4*(i-5) : (i == 9) ? 7'd58 : 7'd70;
 endfunction
 
-// display digits: x = 88 + 40*d, 30 wide; y = 226..281
-localparam [9:0] DX0 = 88, DY0 = 226;
+// left panel (x 16..343, between the console edge and the keypad): badge, carry/zero LEDs with
+// the display, and the red keys, each centred on x = 180 (text column 22)
+// display digits: x = 62 + 40*d; the slanted ink of all six (with the last dp) spans 62..298,
+// 12 pixels inside the window on either side; y = 226..281
+localparam [9:0] DX0 = 62, DY0 = 226;
 
 reg [23:0] ledrgb[0:6];        // out 1-4, carry, zero, 1 Hz: colours, computed outside the pixel path
 integer li;
@@ -144,14 +147,14 @@ always @* begin
 	// console
 	if (inbox(h2, v2, 16, 128, 623, 463)) px = C_CASE;
 	// badge
-	if (inbox(h2, v2, 88, 140, 247, 183)) px = inbox(h2, v2, 90, 142, 245, 181) ? C_BADGE : C_FRAME;
-	// carry / zero LEDs (row 12)
-	if (circ(h2, v2, colx(11), 200, 49)) px = C_LEDRIM;
-	if (circ(h2, v2, colx(11), 200, 30)) px = ledrgb[4];
-	if (circ(h2, v2, colx(24), 200, 49)) px = C_LEDRIM;
-	if (circ(h2, v2, colx(24), 200, 30)) px = ledrgb[5];
+	if (inbox(h2, v2, 100, 140, 259, 183)) px = inbox(h2, v2, 102, 142, 257, 181) ? C_BADGE : C_FRAME;
+	// carry / zero LEDs (row 12, columns 14 and 25; the labels follow them)
+	if (circ(h2, v2, colx(14), 200, 49)) px = C_LEDRIM;
+	if (circ(h2, v2, colx(14), 200, 30)) px = ledrgb[4];
+	if (circ(h2, v2, colx(25), 200, 49)) px = C_LEDRIM;
+	if (circ(h2, v2, colx(25), 200, 30)) px = ledrgb[5];
 	// display window
-	if (inbox(h2, v2, 72, 212, 327, 295)) px = inbox(h2, v2, 76, 216, 323, 291) ? C_WIN : C_BEZEL;
+	if (inbox(h2, v2, 46, 212, 314, 295)) px = inbox(h2, v2, 50, 216, 310, 291) ? C_WIN : C_BEZEL;
 	sg = 4'd8; d = 0; lx = 0; ly = 0; lxs = 0; lvl = 0;
 	if (h2 >= DX0 && h2 < DX0 + 240 && v2 >= DY0 && v2 < DY0 + 56) begin
 		d  = (h2 < DX0 + 40) ? 3'd0 : (h2 < DX0 + 80) ? 3'd1 : (h2 < DX0 + 120) ? 3'd2 :
@@ -174,9 +177,9 @@ always @* begin
 			px = {mix(8'h3c, 8'hff, lvl), mix(8'h08, 8'h3a, lvl), mix(8'h08, 8'h28, lvl)};
 		end
 	end
-	// red keys G (column 14) and H (column 26)
-	if (inbox(h2, v2, 92, 336, 139, 383))  px = inbox(h2, v2, 95, 339, 136, 380) ? (redkeys[0] ? C_RKDN : C_RKEY) : C_RKFR;
-	if (inbox(h2, v2, 188, 336, 235, 383)) px = inbox(h2, v2, 191, 339, 232, 380) ? (redkeys[1] ? C_RKDN : C_RKEY) : C_RKFR;
+	// red keys G (centre column 16) and H (column 28)
+	if (inbox(h2, v2, 108, 336, 155, 383)) px = inbox(h2, v2, 111, 339, 152, 380) ? (redkeys[0] ? C_RKDN : C_RKEY) : C_RKFR;
+	if (inbox(h2, v2, 204, 336, 251, 383)) px = inbox(h2, v2, 207, 339, 248, 380) ? (redkeys[1] ? C_RKDN : C_RKEY) : C_RKFR;
 	// keypad: hex block (4 columns from KX0) and, after a wider gap with a divider, the
 	// function block (2 columns from KXF); keys 32x32, 40 apart, rows 80 apart
 	if (inbox(h2, v2, 344, 136, 615, 447)) px = C_PAD;
