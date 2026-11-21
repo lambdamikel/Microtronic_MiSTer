@@ -1,6 +1,6 @@
 // Runs a scenario on board + video and writes frames as PPM.
 // Extra ops: "mic <file>" streams a .MIC file through the hardware loader, "frame <out.ppm>",
-// "red <0-3>" holds the red keys, "sramhash" prints the 2114 hash (to compare loader vs. JS writeWord).
+// "red <0-3>" holds the red keys, "speed <n>" a step every n clocks (default 6; 600 is the original speed), "sramhash" prints the 2114 hash (to compare loader vs. JS writeWord).
 #include "Vsim_top.h"
 #include "Vsim_top___024root.h"
 #include "verilated.h"
@@ -13,9 +13,9 @@
 #include <sstream>
 static Vsim_top *t;
 static uint64_t steps = 0;
-static int phase = 0;
-static void tick() {               // one clock; a step every 6 clocks
-	t->step = (++phase % 6) == 0;
+static int phase = 0, every = 6;
+static void tick() {               // one clock; a step every 6 clocks ("speed 600" = the original speed at 50 MHz)
+	t->step = (++phase % every) == 0;
 	t->clk = 0; t->eval(); t->clk = 1; t->eval();
 	if (t->executed) steps++;
 }
@@ -50,6 +50,7 @@ int main(int argc, char **argv) {
 		else if (op == "din")  { int v; ss >> v; t->din = v; }
 		else if (op == "red")  { int v; ss >> v; t->redkeys = v; }
 		else if (op == "clock") { int v; ss >> v; t->clock_in = v; }
+		else if (op == "speed") { ss >> every; }
 		else if (op == "mic") { std::string fn; ss >> fn; std::ifstream m(fn, std::ios::binary);
 			std::string data((std::istreambuf_iterator<char>(m)), std::istreambuf_iterator<char>());
 			t->dl = 1; tick(); for (unsigned char c : data) { t->dbyte = c; t->wr = 1; tick(); t->wr = 0; tick(); tick(); }

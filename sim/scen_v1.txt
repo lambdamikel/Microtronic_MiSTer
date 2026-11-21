@@ -1,6 +1,6 @@
 run 60000
 sramhash
-mic /home/mike/claude/microtronic/emulator/programs/guide/G-FIRST.MIC
+mic dist/games/Microtronic/Guide/G-FIRST.MIC
 sramhash
 down HALT
 run 12000

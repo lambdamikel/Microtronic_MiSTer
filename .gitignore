@@ -61,3 +61,5 @@ c5_pin_model_dump.txt
 *_netlist
 *.cdf
 **/.DS_Store
+sim/__pycache__/
+sim/tmp*.html

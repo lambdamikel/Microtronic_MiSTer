@@ -3,7 +3,8 @@
 dist/games/Microtronic/{Busch,Guide,Rathje}/NAME.MIC, each with a line naming the menu
 settings (wiring) it needs.  Programs that need the tone circuit or PicoRAM sound are left out."""
 import json, os
-EMU = os.path.expanduser('~/claude/microtronic/emulator/js/programs.js')
+# a clone of lambdamikel/microtronic-emulator, next to this repo by default
+EMU = os.path.join(os.environ.get('MICROTRONIC_EMU', os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'microtronic-emulator')), 'js', 'programs.js')
 s = open(EMU).read(); lib = json.loads(s[s.index('['):s.rindex(']') + 1])
 FOLDER = {'From the Busch manuals': 'Busch', 'Examples from the guide': 'Guide', 'Games by Björn Rathje': 'Rathje'}
 out = 'dist/games/Microtronic'

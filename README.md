@@ -10,6 +10,8 @@ The CPU and board are a port of the
 ([source](https://github.com/lambdamikel/microtronic-emulator)), and they are
 checked against it instruction by instruction (see *Verification*).
 
+![The core running the clock program from the programmer's guide, with the 1 Hz clock cable on input 4](docs/screenshot.png)
+
 ## Installation
 
 - Copy `releases/Microtronic_<date>.rbf` to `_Computer/` on the SD card.
@@ -86,7 +88,13 @@ Lander) match at every checkpoint, about 5 million instructions in all.
 `sim/check_loader.py` streams `.MIC` files through the hardware loader. It checks
 that each one ends up in the 2114 exactly as the browser emulator's parser would
 put it: all 37 files in `dist/` and all 27 in the Busch-2090 archive pass.
-`sim/tb_video.cpp` renders frames to PPM files.
+`sim/tb_video.cpp` renders frames to PPM files (the screenshot above is one).
+
+The scripts expect clones of
+[microtronic-emulator](https://github.com/lambdamikel/microtronic-emulator) and
+[Busch-2090](https://github.com/lambdamikel/Busch-2090) next to this repository; set
+`MICROTRONIC_EMU` and `BUSCH2090` to use other paths. `jsref.sh` needs Google Chrome,
+the rest Verilator.
 
 ```
 sim/mkscen.py                         # write the scenarios
