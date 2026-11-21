@@ -14,6 +14,8 @@ checked against it instruction by instruction (see *Verification*).
 
 This is version 1.0; the F12 menu shows the version and build date.
 
+Video: [the Microtronic core on the MiSTer DE10-Nano](https://youtu.be/vhijCqyAK6E) (YouTube).
+
 ## Installation
 
 - Copy `releases/Microtronic_<date>.rbf` to `_Computer/` on the SD card.
