@@ -29,22 +29,32 @@ always @(posedge clk) if (ce_pix) begin
 end
 
 // ---- text layer pipeline: h0 -> text cell (h1) -> glyph row (h2) -> pixel (out) ----
+// A cell is {shift, colour[2:0], char[7:0]}.  A cell with the shift bit is drawn 4 pixels to
+// the right, so that labels with an even number of characters can be centred exactly.  Each
+// pixel looks at two cells: its own (A) and the one 4 pixels to the left (B); a shifted B wins,
+// an unshifted A comes next, and otherwise the pixel is the gap left by a shifted A.
 reg [11:0] text[0:4095];        // 80x30 used; padded so rows 30-32 of the blanking read spaces
 reg  [7:0] font[0:4095];
 initial $readmemh("rtl/text.hex", text);
 initial $readmemh("rtl/font.hex", font);
 
-reg [11:0] tq;
-reg  [7:0] fq;
-reg  [3:0] tcol;
+reg [11:0] tq, tqb;
+reg  [7:0] fq, fqb;
+reg  [3:0] tcol, tcolb;
 reg  [9:0] h1, v1, h2, v2;
-wire [11:0] taddr = {v0[8:4], 6'd0} + {2'd0, v0[8:4], 4'd0} + {5'd0, h0[9:3]};   // row*80 + col
+wire [11:0] trow   = {v0[8:4], 6'd0} + {2'd0, v0[8:4], 4'd0};      // row*80
+wire  [9:0] hb     = h0 - 10'd4;
+wire [11:0] taddr  = trow + {5'd0, h0[9:3]};
+wire [11:0] taddrb = (h0 < 4) ? 12'd4095 : trow + {5'd0, hb[9:3]};  // 4095 is padding (a space)
 
 always @(posedge clk) if (ce_pix) begin
-	tq <= text[taddr];
+	tq  <= text[taddr];
+	tqb <= text[taddrb];
 	h1 <= h0; v1 <= v0;
-	fq <= font[{tq[7:0], v1[3:0]}];
-	tcol <= tq[11:8];
+	fq  <= font[{tq[7:0],  v1[3:0]}];
+	fqb <= font[{tqb[7:0], v1[3:0]}];
+	tcol  <= tq[11:8];
+	tcolb <= tqb[11:8];
 	h2 <= h1; v2 <= v1;
 end
 
@@ -77,7 +87,12 @@ localparam [23:0] C_BG    = 24'h262628, C_CASE  = 24'h161618, C_STRIP = 24'hc9c9
                   C_SOCK  = 24'h2a2a2a, C_HOLE  = 24'h060606, C_PEG   = 24'hf2c21a,
                   C_BADGE = 24'hd8d8d4, C_FRAME = 24'h5a5a5a, C_BEZEL = 24'h38383a, C_WIN = 24'h1a0404,
                   C_PAD   = 24'hc8c8c4, C_KEY   = 24'h1c1c1e, C_KEYDN = 24'h9a2a22, C_DIV   = 24'h909090,
-                  C_RKEY  = 24'hd83c3c, C_RKDN  = 24'hff8c80, C_RKFR  = 24'h401010, C_LEDRIM = 24'h3a0c0c;
+                  C_RKEY  = 24'hd83c3c, C_RKDN  = 24'hff8c80, C_RKFR  = 24'h401010, C_LEDRIM = 24'h3a0c0c,
+                  C_KEYHI = 24'h4a4a50, C_KEYLO = 24'h060606;
+
+// keypad columns: hex keys 0-3 from x = 356, function keys 4-5 from x = 532 (a 24-pixel gap);
+// key centres are 8*col + 4 for the text columns 46 51 56 61 | 68 73 used by tools/mklayout.py
+function [9:0] keyx(input [2:0] c); keyx = (c < 4) ? 10'd356 + 40*c : 10'd532 + 40*(c - 4); endfunction
 
 // LED red: dark when off, bright when the level is 255
 function [23:0] ledc(input [7:0] lvl);
@@ -105,6 +120,7 @@ reg [10:0] lxs;
 reg  [3:0] sg;          // segment hit: 0..7, 8 = none
 reg  [7:0] lvl;
 reg        tbit;
+reg  [2:0] tc;
 integer i, kc, kr;
 
 always @* begin
@@ -161,16 +177,21 @@ always @* begin
 	// red keys G (column 14) and H (column 26)
 	if (inbox(h2, v2, 92, 336, 139, 383))  px = inbox(h2, v2, 95, 339, 136, 380) ? (redkeys[0] ? C_RKDN : C_RKEY) : C_RKFR;
 	if (inbox(h2, v2, 188, 336, 235, 383)) px = inbox(h2, v2, 191, 339, 232, 380) ? (redkeys[1] ? C_RKDN : C_RKEY) : C_RKFR;
-	// keypad
-	if (inbox(h2, v2, 360, 136, 615, 447)) px = C_PAD;
-	if (inbox(h2, v2, 527, 140, 528, 443)) px = C_DIV;
+	// keypad: hex block (4 columns from KX0) and, after a wider gap with a divider, the
+	// function block (2 columns from KXF); keys 32x32, 40 apart, rows 80 apart
+	if (inbox(h2, v2, 344, 136, 615, 447)) px = C_PAD;
+	if (inbox(h2, v2, 519, 144, 520, 439)) px = C_DIV;
 	for (kr = 0; kr < 4; kr = kr + 1)
 		for (kc = 0; kc < 6; kc = kc + 1)
-			if (inbox(h2, v2, 372 + 40*kc, 164 + 80*kr, 403 + 40*kc, 195 + 80*kr))
-				px = keys[kc*4 + 3 - kr] ? C_KEYDN : C_KEY;
+			if (inbox(h2, v2, keyx(kc), 164 + 80*kr, keyx(kc) + 31, 195 + 80*kr))
+				px = keys[kc*4 + 3 - kr] ? C_KEYDN :
+				     (v2 <= 165 + 80*kr || h2 <= keyx(kc) + 1) ? C_KEYHI :          // bevel: lit top/left,
+				     (v2 >= 193 + 80*kr || h2 >= keyx(kc) + 29) ? C_KEYLO : C_KEY;  // dark bottom/right
 	// text on top
-	tbit = fq[~h2[2:0]];
-	if (tbit && v2 < 480 && h2 < 640) case (tcol)
+	if (tcolb[3])      begin tbit = fqb[~(h2[2:0] ^ 3'd4)]; tc = tcolb[2:0]; end
+	else if (!tcol[3]) begin tbit = fq[~h2[2:0]];           tc = tcol[2:0];  end
+	else               begin tbit = 1'b0;                   tc = 3'd0;       end
+	if (tbit && v2 < 480 && h2 < 640) case (tc)
 		4'd0: px = 24'h141414;
 		4'd1: px = 24'hd8d8d8;
 		4'd2: px = 24'h8a8a8e;

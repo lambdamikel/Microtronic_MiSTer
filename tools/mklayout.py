@@ -31,10 +31,14 @@ open('rtl/font.hex', 'w').write('\n'.join('%02x' % b for b in rows) + '\n')
 # ---- text layer ----
 W, H = 80, 30
 BLACK, LIGHT, MID, WHITE, YELLOW = 0, 1, 2, 3, 4
-cells = [[(0, 32)] * W for _ in range(H)]
-def put(col, row, s, colour):
-    for i, ch in enumerate(s): cells[row][col + i] = (colour, ord(ch))
-def centre(ccol, row, s, colour): put(ccol - (len(s) - 1) // 2, row, s, colour)
+cells = [[(0, 0, 32)] * W for _ in range(H)]          # (shift, colour, char)
+def put(col, row, s, colour, shift=0):
+    for i, ch in enumerate(s): cells[row][col + i] = (shift, colour, ord(ch))
+def centre(ccol, row, s, colour):
+    """Centre s on the middle of cell ccol (pixel 8*ccol + 4).  A label with an even number of
+    characters is drawn with the shift bit: video.v moves those cells 4 pixels to the right."""
+    if len(s) % 2: put(ccol - len(s) // 2, row, s, colour)
+    else:          put(ccol - len(s) // 2, row, s, colour, shift=1)
 # I/O strip (rows 1-6): socket centres at text columns 5 | 12 16 20 24 | 36 40 44 48 | 58 | 70
 centre(5, 1, 'GND', BLACK); centre(5, 2, '-', BLACK)
 centre(18, 1, 'Ausgänge/Outputs', BLACK)
@@ -46,24 +50,24 @@ centre(70, 1, 'GND', BLACK); centre(70, 2, '-', BLACK)
 for i, c in enumerate((36, 40, 44, 48)): centre(c, 4, 'F' + str(i + 1), MID)
 # badge
 centre(20, 9, 'microtronic', BLACK); centre(20, 10, 'computer system', BLACK)
-# carry / zero LEDs (row 12), display label (row 18)
+# carry / zero LEDs (row 12), display label (row 19, below the bezel)
 put(13, 12, 'Carry', LIGHT); put(26, 12, 'Zero', LIGHT)
-centre(25, 18, 'Anzeige/Display', LIGHT)
+centre(25, 19, 'Anzeige/Display', LIGHT)
 # red keys G / H: centres at columns 14 and 26
 centre(14, 25, 'G', LIGHT); centre(26, 25, 'H', LIGHT)
 centre(20, 26, 'Taster/Keys', LIGHT)
 centre(14, 27, '( , )', MID); centre(26, 27, '( . )', MID)
-# keypad: label rows 9, 14, 19, 24; key interiors on rows 11, 16, 21, 26; centres 48 53 58 63 68 73
+# keypad: label rows 9, 14, 19, 24; key interiors on rows 11, 16, 21, 26; centres 46 51 56 61 | 68 73 (video.v keyx)
 KEYS = [['C', 'D', 'E', 'F', 'NEXT', 'REG'], ['8', '9', 'A', 'B', 'BKP', 'STEP'],
         ['4', '5', '6', '7', 'RUN', 'HALT'], ['0', '1', '2', '3', 'C/CE', 'PGM']]
-PCKEY = {'NEXT': 'Ent', 'REG': 'G', 'BKP': 'K', 'STEP': 'S', 'RUN': 'R', 'HALT': 'H', 'C/CE': 'Bksp', 'PGM': 'P'}
+PCKEY = {'NEXT': 'Ent', 'REG': 'G', 'BKP': 'K', 'STEP': 'S', 'RUN': 'R', 'HALT': 'H', 'C/CE': 'Del', 'PGM': 'P'}
 for r, row in enumerate(KEYS):
     for c, k in enumerate(row):
-        cc = 48 + 5 * c
+        cc = (46 + 5 * c) if c < 4 else (68 + 5 * (c - 4))
         centre(cc, 9 + 5 * r, k, BLACK)
         if k in PCKEY: centre(cc, 11 + 5 * r, PCKEY[k], MID)
 put(1, 29, 'F1-F4 inputs   , . keys G/H   Esc reset   F12 menu: load .MIC, speed, wiring', MID)
-flat = ['%03x' % ((col << 8) | ch) for row in cells for col, ch in row]
+flat = ['%03x' % ((sh << 11) | (col << 8) | ch) for row in cells for sh, col, ch in row]
 flat += ['020'] * (4096 - len(flat))                       # padding: the blanking rows read spaces
 open('rtl/text.hex', 'w').write('\n'.join(flat) + '\n')
 print('font', len(rows), 'bytes; text', W * H, 'cells')
